@@ -1,5 +1,6 @@
 #include "ClientView.hpp"
 #include "Logger.hpp"
+#include "MessageConfig.hpp"
 
 #include <string>
 #include <iostream>
@@ -51,6 +52,7 @@ void ClientView::start_reading_signals(void) {
     std::istringstream input_manager;
     std::string message;
     std::getline(std::cin, message);
+    message.push_back(message_config::MESSAGE_EOF);
 
     std::thread(&ClientView::send_message, this, std::ref(message)).detach();
     start_reading_signals();
