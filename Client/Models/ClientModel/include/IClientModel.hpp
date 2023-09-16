@@ -23,6 +23,7 @@
 #include <boost/asio/ip/tcp.hpp>
 
 #include <memory>
+#include <string>
 
 namespace bukhtagram {
 namespace mc {
@@ -35,12 +36,23 @@ public:
 
     virtual std::weak_ptr<boost::asio::io_context> io_context(void) const = 0;
     virtual std::weak_ptr<boost::asio::ip::tcp::socket> socket(void) const = 0;
+    virtual std::string message(void) const = 0;
 
     // Getters ends;
 
     // Setters starts;
 
+    virtual bool set_message(const std::string &val) = 0;
+    virtual bool set_message(std::string &&val) = 0;
+
     // Setters ends;
+
+    // Other methods starts;
+
+    virtual bool message_append(const std::string &val) = 0;
+    virtual bool message_append(std::string &&val) = 0;
+
+    // Other methods ends;
 };
 
 }   // !models;

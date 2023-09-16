@@ -124,8 +124,16 @@ bool ClientController::handle_error(const boost::system::error_code &error) {
 
 void ClientController::handle_read(std::vector<char> &data, const uint64_t DATA_SIZE, const boost::system::error_code &error) {
     DECLARE_TAG_SCOPE;
+
     std::string transformed_data(std::begin(data), std::begin(data) + DATA_SIZE);
-    LOG_INFO << "bytes count: " << DATA_SIZE << "; data: " << transformed_data;
+    LOG_DEBUG << "bytes count: " << DATA_SIZE << "; data: " << transformed_data;
+    m_client_model->message_append(transformed_data);
+    if (transformed_data.back() == message_config::MESSAGE_EOF) {
+        auto message = m_client_model->message();
+        LOG_INFO << "Packet was read fully. Data size = " << message.size() << "; data = " << message;
+        m_client_model->set_message(message_config::EMPTY_STRING);
+    }
+
     start_read();
 }
 

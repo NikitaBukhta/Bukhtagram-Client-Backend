@@ -21,11 +21,7 @@
 
 #include "IClientModel.hpp"
 
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
-
 #include <mutex>
-#include <memory>
 
 namespace bukhtagram {
 namespace mc {
@@ -41,12 +37,23 @@ public:
 
     std::weak_ptr<boost::asio::io_context> io_context(void) const override;
     std::weak_ptr<boost::asio::ip::tcp::socket> socket(void) const override;
+    std::string message(void) const override;
 
     // Getters ends;
 
     // Setters starts;
 
+    bool set_message(const std::string &val) override;
+    bool set_message(std::string &&val) override;
+
     // Setters ends;
+
+    // Other methods starts;
+
+    bool message_append(const std::string &val) override;
+    bool message_append(std::string &&val) override;
+
+    // Other methods ends;
 
 private:
     // Private Setters starts;
@@ -67,6 +74,9 @@ private:
 
     mutable std::mutex m_socket_mutex;
     std::shared_ptr<boost::asio::ip::tcp::socket> m_socket;
+
+    mutable std::mutex m_message_mutex;
+    std::string m_message;
 };
 
 }   // !models;

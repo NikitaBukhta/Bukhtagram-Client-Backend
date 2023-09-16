@@ -44,6 +44,11 @@ std::weak_ptr<boost::asio::ip::tcp::socket> ClientModel::socket(void) const {
     return m_socket;
 }
 
+std::string ClientModel::message(void) const {
+    std::lock_guard<std::mutex> guard(m_message_mutex);
+    return m_message;
+}
+
 /*
  *  Getters ends;
  */
@@ -52,8 +57,40 @@ std::weak_ptr<boost::asio::ip::tcp::socket> ClientModel::socket(void) const {
  *  Setters starts;
  */
 
+bool ClientModel::set_message(const std::string &val) {
+    std::lock_guard<std::mutex> guard(m_message_mutex);
+    m_message = val;
+    m_message.shrink_to_fit();
+    return true;
+}
+
+bool ClientModel::set_message(std::string &&val) {
+    std::lock_guard<std::mutex> guard(m_message_mutex);
+    m_message = std::move(val);
+    m_message.shrink_to_fit();
+    return true;
+}
+
 /*
  *  Setters ends;
+ */
+
+/*
+ *  Other methods starts;
+ */
+
+bool ClientModel::message_append(const std::string &val) {
+    m_message.append(val);
+    return true;
+}
+
+bool ClientModel::message_append(std::string &&val) {
+    m_message.append(std::move(val));
+    return true;
+}
+
+/*
+ *  Other methods ends;
  */
 
 /*
