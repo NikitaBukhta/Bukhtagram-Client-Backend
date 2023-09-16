@@ -19,14 +19,11 @@
 #include "ClientController.hpp"
 
 #include "Logger.hpp"
+#include "MessageConfig.hpp"
 
 #include <boost/function.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/bind/bind.hpp>
-
-#include <array>
-#include <vector>
-#include <iostream>
 
 namespace bukhtagram {
 namespace mc {
@@ -98,11 +95,13 @@ void ClientController::start_read(void) {
     /* As we use async programming, the data should be destroyed at the end of the method.
        To escape the desctruction the buffer, we made this static + made optimization of method work :);
      */
-    static std::array<char, STANDART_BUFFER_SIZE> buf;
+    static std::vector<char> buf;
     boost::system::error_code error;
     auto socket = m_client_model->socket().lock();
 
-    boost::function<void(std::array<char, STANDART_BUFFER_SIZE>&, const uint64_t, const boost::system::error_code)> read_handler
+    buf.resize(message_config::BASE_BUFFER_SIZE);
+
+    boost::function<void(std::vector<char>&, const uint64_t, const boost::system::error_code)> read_handler
         = boost::bind(&ClientController::handle_read, this, _1, _2, _3);
 
     socket->async_read_some(boost::asio::buffer(buf), [read_handler](const boost::system::error_code &error, const uint64_t bytes_transferred){
@@ -123,7 +122,7 @@ bool ClientController::handle_error(const boost::system::error_code &error) {
     return true;
 }
 
-void ClientController::handle_read(std::array<char, STANDART_BUFFER_SIZE> &data, const uint64_t DATA_SIZE, const boost::system::error_code &error) {
+void ClientController::handle_read(std::vector<char> &data, const uint64_t DATA_SIZE, const boost::system::error_code &error) {
     DECLARE_TAG_SCOPE;
     std::string transformed_data(std::begin(data), std::begin(data) + DATA_SIZE);
     LOG_INFO << "bytes count: " << DATA_SIZE << "; data: " << transformed_data;

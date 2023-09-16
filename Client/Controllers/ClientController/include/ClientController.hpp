@@ -26,11 +26,9 @@
 
 #include <memory>
 #include <string>
-
-#include <inttypes.h>
 #include <vector>
 
-#define STANDART_BUFFER_SIZE 128
+#include <inttypes.h>
 
 namespace bukhtagram {
 namespace mc {
@@ -54,7 +52,7 @@ private:
     void start_read(void);
 
     bool handle_error(const boost::system::error_code &error);
-    void handle_read(std::array<char, STANDART_BUFFER_SIZE> &data, const uint64_t DATA_SIZE, const boost::system::error_code &error);
+    void handle_read(std::vector<char> &data, const uint64_t DATA_SIZE, const boost::system::error_code &error);
     void handle_write(const uint64_t DATA_SIZE, const boost::system::error_code &error);
 
 private:
