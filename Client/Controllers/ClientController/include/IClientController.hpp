@@ -31,6 +31,7 @@ class IClientController {
 public:
     virtual void run(void) = 0;
     virtual bool connect_to(const std::string &address, uint16_t port) = 0;
+    virtual void disconnect(void) = 0;
     virtual void send_message(const std::string &message) = 0;
 };
 

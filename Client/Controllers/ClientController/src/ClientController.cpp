@@ -41,8 +41,7 @@ ClientController::~ClientController(void) {
     DECLARE_TAG_SCOPE;
     LOG_INFO << "called";
 
-    auto socket = m_client_model->socket().lock();
-    socket->close();
+    disconnect();
 }
 
 void ClientController::run(void) {
@@ -68,6 +67,22 @@ bool ClientController::connect_to(const std::string &address, uint16_t port) {
 
     LOG_ERROR << "Cannot to connect to the server";
     return false;
+}
+
+void ClientController::disconnect(void) {
+    DECLARE_TAG_SCOPE;
+    auto socket = m_client_model->socket().lock();
+    auto local_endpoint = socket->local_endpoint();
+    auto remote_endport = socket->remote_endpoint();
+
+    if (socket->is_open()) {
+        LOG_INFO << "client ip: " << local_endpoint.address().to_string() << "; port: "  << local_endpoint.port()
+        << "; server ip: " << remote_endport.address().to_string() << "; port: " << remote_endport.port();
+
+        socket->close();
+    } else {
+        LOG_WARNING << "Socket is already closed.";
+    }
 }
 
 void ClientController::send_message(const std::string &message) {
@@ -112,29 +127,37 @@ void ClientController::start_read(void) {
 // TODO: fix bug when server is closed;
 bool ClientController::handle_error(const boost::system::error_code &error) {
     DECLARE_TAG_SCOPE;
+    bool ret = false;
 
-    if (error.value() == boost::system::errc::success) {
-        LOG_TRACE << "no errors handled";
-        return false;
+    if (error == boost::asio::error::connection_reset) {
+        disconnect();
+        ret = true;
+    }
+    else if (error.value() != boost::system::errc::success) {
+        LOG_ERROR << "Error #" << error.value() << ": " << error.message();
+        ret = true;
     }
 
-    LOG_ERROR << error.what();
-    return true;
+    return ret;
 }
 
 void ClientController::handle_read(std::vector<char> &data, const uint64_t DATA_SIZE, const boost::system::error_code &error) {
     DECLARE_TAG_SCOPE;
+    LOG_INFO << "called";
 
-    std::string transformed_data(std::begin(data), std::begin(data) + DATA_SIZE);
-    LOG_DEBUG << "bytes count: " << DATA_SIZE << "; data: " << transformed_data;
-    m_client_model->message_append(transformed_data);
-    if (transformed_data.back() == message_config::MESSAGE_EOF) {
-        auto message = m_client_model->message();
-        LOG_INFO << "Packet was read fully. Data size = " << message.size() << "; data = " << message;
-        m_client_model->set_message(message_config::EMPTY_STRING);
+    handle_error(error);
+    if (m_client_model->socket().lock()->is_open()) {
+        std::string transformed_data(std::begin(data), std::begin(data) + DATA_SIZE);
+        LOG_DEBUG << "bytes count: " << DATA_SIZE << "; data: " << transformed_data;
+        m_client_model->message_append(transformed_data);
+        if (transformed_data.back() == message_config::MESSAGE_EOF) {
+            auto message = m_client_model->message();
+            LOG_INFO << "Packet was read fully. Data size = " << message.size() << "; data = " << message;
+            m_client_model->set_message(message_config::EMPTY_STRING);
+        }
+
+        start_read();
     }
-
-    start_read();
 }
 
 void ClientController::handle_write(const uint64_t DATA_SIZE, const boost::system::error_code &error) {

@@ -44,6 +44,7 @@ public:
 
     void run(void) override;
     bool connect_to(const std::string &address, uint16_t port) override;
+    void disconnect(void);
     void send_message(const std::string &message) override;
 
     // IClientController overriding ends;
