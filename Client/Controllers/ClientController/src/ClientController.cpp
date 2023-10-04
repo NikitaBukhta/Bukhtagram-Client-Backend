@@ -72,10 +72,10 @@ bool ClientController::connect_to(const std::string &address, uint16_t port) {
 void ClientController::disconnect(void) {
     DECLARE_TAG_SCOPE;
     auto socket = m_client_model->socket().lock();
-    auto local_endpoint = socket->local_endpoint();
-    auto remote_endport = socket->remote_endpoint();
 
     if (socket->is_open()) {
+        auto local_endpoint = socket->local_endpoint();
+        auto remote_endport = socket->remote_endpoint();
         LOG_INFO << "client ip: " << local_endpoint.address().to_string() << "; port: "  << local_endpoint.port()
         << "; server ip: " << remote_endport.address().to_string() << "; port: " << remote_endport.port();
 
@@ -129,7 +129,7 @@ bool ClientController::handle_error(const boost::system::error_code &error) {
     DECLARE_TAG_SCOPE;
     bool ret = false;
 
-    if (error == boost::asio::error::connection_reset) {
+    if (error == boost::asio::error::connection_reset || error == boost::asio::error::eof) {
         disconnect();
         ret = true;
     }
